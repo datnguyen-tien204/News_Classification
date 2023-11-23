@@ -1,10 +1,7 @@
 import torch
 import torch.nn as nn
-
-from torch.autograd import Variable
 from torch.nn import functional as F
-import numpy as np
-
+from torch.autograd import Variable
 
 class AttentionModel(torch.nn.Module):
     def __init__(self, output_size, hidden_size, vocab_size, embedding_length):
@@ -18,6 +15,10 @@ class AttentionModel(torch.nn.Module):
         self.word_embeddings = nn.Embedding(vocab_size, embedding_length)
         self.lstm = nn.LSTM(embedding_length, hidden_size)
         self.label = nn.Linear(hidden_size, output_size)
+
+        # Xác định thiết bị cho mô hình
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.to(self.device)
 
     def attention_net(self, lstm_output, final_state):
         hidden = final_state.squeeze(0)
@@ -34,14 +35,8 @@ class AttentionModel(torch.nn.Module):
         input = input.permute(1, 0, 2)
 
         batch_size = input.shape[1]  # Xác định batch_size dựa trên kích thước đầu vào
-        h_0 = Variable(torch.zeros(1, batch_size, self.hidden_size))
-        c_0 = Variable(torch.zeros(1, batch_size, self.hidden_size))
-
-        # Thêm dòng này để chuyển các tensor đến thiết bị cuda:0 nếu có thể
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        input = input.to(device)
-        h_0 = h_0.to(device)
-        c_0 = c_0.to(device)
+        h_0 = torch.zeros(1, batch_size, self.hidden_size).to(self.device)
+        c_0 = torch.zeros(1, batch_size, self.hidden_size).to(self.device)
 
         output, (final_hidden_state, final_cell_state) = self.lstm(input, (h_0, c_0))
         output = output.permute(1, 0, 2)
