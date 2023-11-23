@@ -37,6 +37,12 @@ class AttentionModel(torch.nn.Module):
         h_0 = Variable(torch.zeros(1, batch_size, self.hidden_size))
         c_0 = Variable(torch.zeros(1, batch_size, self.hidden_size))
 
+        # Thêm dòng này để chuyển các tensor đến thiết bị cuda:0 nếu có thể
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        input = input.to(device)
+        h_0 = h_0.to(device)
+        c_0 = c_0.to(device)
+
         output, (final_hidden_state, final_cell_state) = self.lstm(input, (h_0, c_0))
         output = output.permute(1, 0, 2)
 
